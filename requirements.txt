@@ -1,5 +1,4 @@
 fastapi
 uvicorn
 groq
-pillow
 requests
