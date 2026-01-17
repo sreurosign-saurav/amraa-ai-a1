@@ -1,11 +1,16 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import requests
-import os
 
 app = FastAPI()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ChatRequest(BaseModel):
     message: str
@@ -16,30 +21,4 @@ def root():
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    try:
-        r = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "llama3-8b-8192",
-                "messages": [
-                    {"role": "user", "content": req.message}
-                ],
-            },
-            timeout=30
-        )
-
-        data = r.json()
-        return {
-            "reply": data["choices"][0]["message"]["content"]
-        }
-
-    except Exception as e:
-        return {
-            "error": str(e)
-        }
-
-
+    return {"reply": f"You said: {req.message}"}
