@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import base64
 import requests
-import os
+import base64
 
 app = FastAPI()
 
@@ -14,7 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# -------- MODELS --------
 class ChatRequest(BaseModel):
     message: str
 
@@ -24,21 +22,27 @@ class ImageRequest(BaseModel):
 
 @app.get("/")
 def root():
-    return {"status": "Amraa AI server running"}
+    return {"status": "Amraa AI backend running"}
 
-# -------- CHAT API --------
+
 @app.post("/chat")
 def chat(req: ChatRequest):
+    msg = req.message.lower()
+
+    if msg.startswith("create") or msg.startswith("generate"):
+        return {
+            "reply": "Creating image, please wait..."
+        }
+
     return {
-        "reply": f"Amraa AI: You said '{req.message}'. Try typing: create a cat image"
+        "reply": f"Amraa AI: You said '{req.message}'"
     }
 
-# -------- IMAGE API --------
-@app.post("/image")
-def generate_image(req: ImageRequest):
-    prompt = req.prompt.replace("create", "").strip()
 
-    # FREE Stable Diffusion API (works without key)
+@app.post("/image")
+def image(req: ImageRequest):
+    prompt = req.prompt.replace("create", "").replace("generate", "").strip()
+
     url = "https://stablediffusionapi.com/api/v3/text2img"
 
     payload = {
@@ -49,15 +53,18 @@ def generate_image(req: ImageRequest):
         "num_inference_steps": 20
     }
 
-    r = requests.post(url, json=payload, timeout=60)
-    data = r.json()
+    try:
+        r = requests.post(url, json=payload, timeout=90)
+        data = r.json()
 
-    if "output" not in data:
-        return {"error": "Image generation failed"}
+        if "output" not in data:
+            return {"error": "Image generation failed"}
 
-    image_url = data["output"][0]
-    img_bytes = requests.get(image_url).content
-    img_base64 = base64.b64encode(img_bytes).decode("utf-8")
+        image_url = data["output"][0]
+        img_bytes = requests.get(image_url).content
+        img_base64 = base64.b64encode(img_bytes).decode("utf-8")
 
-    return {"image": img_base64}
+        return {"image": img_base64}
 
+    except Exception as e:
+        return {"error": str(e)}
