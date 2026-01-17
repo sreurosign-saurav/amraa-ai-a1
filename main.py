@@ -21,7 +21,9 @@ HF_API_KEY = os.getenv("HF_API_KEY")
 
 client = Groq(api_key=GROQ_API_KEY)
 
-SD_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
+# UPDATED SD URL (HF ROUTER)
+SD_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2"
+
 HF_HEADERS = {
     "Authorization": f"Bearer {HF_API_KEY}",
     "Content-Type": "application/json"
@@ -111,4 +113,3 @@ def image(req: ImageRequest):
             time.sleep(5)
 
     return {"error": "Image model busy, try again later"}
-
