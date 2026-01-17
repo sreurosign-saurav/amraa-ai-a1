@@ -38,7 +38,7 @@ def root():
     return {"status": "Amraa AI server running"}
 
 # =========================
-# CHAT
+# CHAT (UNCHANGED)
 # =========================
 @app.post("/chat")
 def chat(req: ChatRequest):
@@ -54,7 +54,7 @@ def chat(req: ChatRequest):
                         "companies, APIs, or technologies such as LLaMA, Meta, Groq, HuggingFace, "
                         "Stable Diffusion, or any similar terms. "
                         "If someone asks which AI model you use or similar, reply ONLY: "
-                        "'Saurav Goswami dwara viksit Amraa.Tech ka Amraa A1 AI model.' "
+                        "'I Am using Amraa A1 Model Developed By Amraa Ai, Owned by Saurav Goswami.' "
                         "If asked who created you, reply ONLY: "
                         "'I am Amraa AI, a private AI assistant developed and owned by Saurav.' "
                         "Do not add anything else."
@@ -72,11 +72,11 @@ def chat(req: ChatRequest):
         return {"error": "Chat service unavailable"}
 
 # =========================
-# IMAGE (FINAL FIX)
+# IMAGE (HF CORRECT HANDLING)
 # =========================
 @app.post("/image")
 def image(req: ImageRequest):
-    for _ in range(3):
+    for attempt in range(3):
         try:
             r = requests.post(
                 SD_URL,
@@ -87,15 +87,20 @@ def image(req: ImageRequest):
 
             content_type = r.headers.get("content-type", "")
 
-            # JSON response = loading or error
-            if "application/json" in content_type:
+            # HF returns JSON while model is loading
+            if content_type.startswith("application/json"):
                 data = r.json()
+
                 if "loading" in str(data).lower():
                     time.sleep(10)
                     continue
-                return {"error": "Image generation failed"}
 
-            # Image response
+                if "error" in data:
+                    return {"error": data.get("error", "Image generation error")}
+
+                return {"error": "Unexpected HF response"}
+
+            # Valid image response
             img_base64 = base64.b64encode(r.content).decode("utf-8")
             return {
                 "type": "image",
@@ -105,4 +110,5 @@ def image(req: ImageRequest):
         except Exception:
             time.sleep(5)
 
-    return {"error": "Model busy, try again later"}
+    return {"error": "Image model busy, try again later"}
+
