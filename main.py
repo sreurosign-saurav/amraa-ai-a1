@@ -6,42 +6,50 @@ import requests
 import base64
 import os
 
-# ---------------- APP ----------------
-app = FastAPI()
+# =========================
+# App Init
+# =========================
+app = FastAPI(title="Amraa AI Server")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ------------- KEYS ------------------
+# =========================
+# Environment Keys
+# =========================
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 HF_API_KEY = os.getenv("HF_API_KEY")
 
 client = Groq(api_key=GROQ_API_KEY)
 
-# --------- STABLE DIFFUSION ----------
 SD_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
-SD_HEADERS = {
+HF_HEADERS = {
     "Authorization": f"Bearer {HF_API_KEY}"
 }
 
-# ------------- MODELS ----------------
+# =========================
+# Request Models
+# =========================
 class ChatRequest(BaseModel):
     message: str
 
 class ImageRequest(BaseModel):
     prompt: str
 
-# ------------- ROOT ------------------
+# =========================
+# Root
+# =========================
 @app.get("/")
 def root():
     return {"status": "Amraa AI server running"}
 
-# ------------- CHAT ------------------
+# =========================
+# CHAT ENDPOINT (LOCKED IDENTITY)
+# =========================
 @app.post("/chat")
 def chat(req: ChatRequest):
     try:
@@ -51,42 +59,49 @@ def chat(req: ChatRequest):
                 {
                     "role": "system",
                     "content": (
-                        "You are Amraa AI, a private AI assistant developed by Saurav. "
-                        "You were created and owned by Amraa AI. "
-                        "You must NEVER mention Meta, Facebook, LLaMA, Groq, or any other company. "
-                        "If asked who created or owns you, always reply: "
-                        "'I am Amraa AI, developed and owned by Saurav.'"
+                        "You are Amraa AI, a private AI assistant developed and owned by Saurav Goswami. "
+                        "You must NEVER mention or reveal any underlying AI model names, providers, "
+                        "companies, APIs, or technologies such as LLaMA, Meta, Groq, HuggingFace, "
+                        "Stable Diffusion, or any similar terms. "
+                        "If a user asks about your model, training data, internal architecture, "
+                        "or what you are built on, you must respond ONLY with a high-level, "
+                        "non-technical answer. "
+                        "If asked directly about model names, you must reply: "
+                        "'I am Amraa AI, a private AI assistant developed and owned by Saurav.' "
+                        "Do not add any extra explanation."
                     )
                 },
                 {"role": "user", "content": req.message}
             ],
             temperature=0.7,
-            max_tokens=300
+            max_tokens=250
         )
 
-        return {"reply": response.choices[0].message.content}
+        return {
+            "reply": response.choices[0].message.content.strip()
+        }
 
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": "Chat service temporarily unavailable"}
 
-# ------------- IMAGE -----------------
+# =========================
+# IMAGE GENERATION ENDPOINT
+# =========================
 @app.post("/image")
 def image(req: ImageRequest):
     try:
         r = requests.post(
             SD_URL,
-            headers=SD_HEADERS,
+            headers=HF_HEADERS,
             json={"inputs": req.prompt},
-            timeout=90
+            timeout=60
         )
 
-        # HF kabhi error JSON bhejta hai
-        if "application/json" in r.headers.get("content-type", ""):
-            return {"error": r.json()}
+        if r.status_code != 200:
+            return {"error": "Image generation failed"}
 
         img_base64 = base64.b64encode(r.content).decode("utf-8")
         return {"image": img_base64}
 
-    except Exception as e:
-        return {"error": str(e)}
-
+    except Exception:
+        return {"error": "Image service unavailable"}
