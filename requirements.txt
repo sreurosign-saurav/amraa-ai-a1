@@ -1,6 +1,3 @@
 fastapi
 uvicorn
-grod
-pillow
-requests
-
+groq
