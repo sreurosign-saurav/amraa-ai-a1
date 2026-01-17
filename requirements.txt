@@ -1,4 +1,6 @@
 fastapi
 uvicorn
+grod
+pillow
 requests
-pydantic
+
