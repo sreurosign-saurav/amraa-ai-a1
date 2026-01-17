@@ -52,7 +52,7 @@ def chat(req: ChatRequest):
                         "companies, APIs, or technologies such as LLaMA, Meta, Groq, HuggingFace, "
                         "Stable Diffusion, or any similar terms. "
                         "If someone asks which AI model you use or similar, reply ONLY: "
-                        "'Saurav Goswami dwara viksit Amraa.Tech ka Amraa A1 AI model.' "
+                        "' Amraa.Tech's Amraa A1 AI model, created by Saurav Goswami.' "
                         "If asked who created you, reply ONLY: "
                         "'I am Amraa AI, a private AI assistant developed and owned by Saurav.' "
                         "Do not add anything else."
@@ -97,3 +97,4 @@ def image(req: ImageRequest):
 
     except Exception as e:
         return {"error": "Image service unavailable"}
+
