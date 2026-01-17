@@ -6,9 +6,6 @@ import requests
 import base64
 import os
 
-# =========================
-# App Init
-# =========================
 app = FastAPI(title="Amraa AI Server")
 
 app.add_middleware(
@@ -18,9 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# =========================
-# Environment Keys
-# =========================
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 HF_API_KEY = os.getenv("HF_API_KEY")
 
@@ -28,28 +22,21 @@ client = Groq(api_key=GROQ_API_KEY)
 
 SD_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
 HF_HEADERS = {
-    "Authorization": f"Bearer {HF_API_KEY}",
-    "Accept": "image/png"
+    "Authorization": f"Bearer {HF_API_KEY}"
 }
 
-# =========================
-# Request Models
-# =========================
 class ChatRequest(BaseModel):
     message: str
 
 class ImageRequest(BaseModel):
     prompt: str
 
-# =========================
-# Root
-# =========================
 @app.get("/")
 def root():
     return {"status": "Amraa AI server running"}
 
 # =========================
-# CHAT ENDPOINT (HARD RULES)
+# CHAT
 # =========================
 @app.post("/chat")
 def chat(req: ChatRequest):
@@ -64,16 +51,11 @@ def chat(req: ChatRequest):
                         "You must NEVER mention or reveal any underlying AI model names, providers, "
                         "companies, APIs, or technologies such as LLaMA, Meta, Groq, HuggingFace, "
                         "Stable Diffusion, or any similar terms. "
-                        "If a user asks about your model, training data, internal architecture, "
-                        "or what you are built on, you must respond ONLY with a high-level, "
-                        "non-technical answer. "
-                        "If a user asks questions like 'which AI model you use', "
-                        "'what model are you based on', or any similar question, "
-                        "you MUST reply ONLY with this exact sentence: "
+                        "If someone asks which AI model you use or similar, reply ONLY: "
                         "'Saurav Goswami dwara viksit Amraa.Tech ka Amraa A1 AI model.' "
-                        "If asked who created or owns you, reply: "
+                        "If asked who created you, reply ONLY: "
                         "'I am Amraa AI, a private AI assistant developed and owned by Saurav.' "
-                        "Do not add any extra explanation."
+                        "Do not add anything else."
                     )
                 },
                 {"role": "user", "content": req.message}
@@ -85,10 +67,10 @@ def chat(req: ChatRequest):
         return {"reply": response.choices[0].message.content.strip()}
 
     except Exception:
-        return {"error": "Chat service temporarily unavailable"}
+        return {"error": "Chat service unavailable"}
 
 # =========================
-# IMAGE GENERATION ENDPOINT (RESTORED)
+# IMAGE (FIXED)
 # =========================
 @app.post("/image")
 def image(req: ImageRequest):
@@ -97,24 +79,21 @@ def image(req: ImageRequest):
             SD_URL,
             headers=HF_HEADERS,
             json={"inputs": req.prompt},
-            timeout=90
+            timeout=120
         )
 
-        if r.status_code != 200:
-            return {"error": "Image generation failed"}
+        # HuggingFace sometimes returns JSON (loading / error)
+        if "application/json" in r.headers.get("content-type", ""):
+            data = r.json()
+            if "error" in data:
+                return {"error": "Model loading, try again in 10 seconds"}
 
-        content_type = r.headers.get("content-type", "")
-
-        if "image" not in content_type:
-            return {"error": "Invalid image response"}
-
+        # Image bytes
         img_base64 = base64.b64encode(r.content).decode("utf-8")
-        img_url = f"data:image/png;base64,{img_base64}"
-
         return {
             "type": "image",
-            "url": img_url
+            "url": f"data:image/png;base64,{img_base64}"
         }
 
-    except Exception:
+    except Exception as e:
         return {"error": "Image service unavailable"}
