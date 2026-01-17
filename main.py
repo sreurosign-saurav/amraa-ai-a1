@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import os
 import requests
 import base64
-import os
 from groq import Groq
 
 app = FastAPI()
@@ -21,7 +21,7 @@ HF_API_KEY = os.getenv("HF_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 
 SD_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
-HEADERS = {
+SD_HEADERS = {
     "Authorization": f"Bearer {HF_API_KEY}"
 }
 
@@ -37,27 +37,22 @@ def root():
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    completion = client.chat.completions.create(
-        model="llama3-8b-8192",
-        messages=[
-            {"role": "system", "content": "You are Amraa AI assistant."},
-            {"role": "user", "content": req.message}
-        ]
-    )
-    return {
-        "reply": completion.choices[0].message.content
-    }
+    try:
+        res = client.chat.completions.create(
+            model="llama3-8b-8192",
+            messages=[{"role": "user", "content": req.message}]
+        )
+        return {"reply": res.choices[0].message.content}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.post("/image")
 def image(req: ImageRequest):
-    response = requests.post(
+    r = requests.post(
         SD_URL,
-        headers=HEADERS,
+        headers=SD_HEADERS,
         json={"inputs": req.prompt},
         timeout=60
     )
-    image_base64 = base64.b64encode(response.content).decode("utf-8")
-    return {
-        "image": image_base64
-    }
-
+    img = base64.b64encode(r.content).decode()
+    return {"image": img}
