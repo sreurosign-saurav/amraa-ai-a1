@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import os
 import requests
 import base64
+import os
 from groq import Groq
 
 app = FastAPI()
@@ -38,21 +38,28 @@ def root():
 @app.post("/chat")
 def chat(req: ChatRequest):
     try:
-        res = client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=[{"role": "user", "content": req.message}]
+        completion = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": "You are Amraa AI Assistant."},
+                {"role": "user", "content": req.message}
+            ]
         )
-        return {"reply": res.choices[0].message.content}
+        return {"reply": completion.choices[0].message.content}
     except Exception as e:
         return {"error": str(e)}
 
 @app.post("/image")
 def image(req: ImageRequest):
-    r = requests.post(
-        SD_URL,
-        headers=SD_HEADERS,
-        json={"inputs": req.prompt},
-        timeout=60
-    )
-    img = base64.b64encode(r.content).decode()
-    return {"image": img}
+    try:
+        r = requests.post(
+            SD_URL,
+            headers=SD_HEADERS,
+            json={"inputs": req.prompt},
+            timeout=60
+        )
+        img_base64 = base64.b64encode(r.content).decode("utf-8")
+        return {"image": img_base64}
+    except Exception as e:
+        return {"error": str(e)}
+
