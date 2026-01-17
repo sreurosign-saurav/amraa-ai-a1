@@ -11,6 +11,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -37,21 +38,20 @@ def root():
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    try:
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {"role": "system", "content": "You are Amraa AI assistant."},
-                {"role": "user", "content": req.message}
-            ],
-            temperature=0.7,
-            max_tokens=200
-        )
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are Amraa AI, a helpful, friendly assistant. Never repeat the user's message word-for-word."
+            },
+            {"role": "user", "content": req.message}
+        ],
+        temperature=0.7,
+        max_tokens=200
+    )
 
-        return {"reply": response.choices[0].message.content}
-
-    except Exception as e:
-        return {"error": str(e)}
+    return {"reply": response.choices[0].message.content}
 
 @app.post("/image")
 def image(req: ImageRequest):
