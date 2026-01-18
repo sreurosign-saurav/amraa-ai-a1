@@ -17,13 +17,11 @@ app.add_middleware(
 )
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-HF_API_KEY = os.getenv("HF_API_KEY")
 
 client = Groq(api_key=GROQ_API_KEY)
 
 SD_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2"
 HF_HEADERS = {
-    "Authorization": f"Bearer {HF_API_KEY}",
     "Content-Type": "application/json"
 }
 
@@ -40,8 +38,8 @@ SYSTEM_RULES = (
     "If asked who created you, reply ONLY: "
     "'I am Amraa AI, a private AI assistant developed and owned by Saurav.' "
     "Do not add anything else. "
-    "LANGUAGE RULE: When replying in Hindi or English,hinglish, and any other language ensure correct spelling, "
-    "proper grammar, natural sentence structure, and fluent language."
+    "LANGUAGE RULE: When replying in Hindi, English, Hinglish, or any other language, "
+    "ensure correct spelling, proper grammar, natural sentence structure, and fluent language."
 )
 
 class ChatRequest(BaseModel):
@@ -55,7 +53,7 @@ def root():
     return {"status": "Amraa AI server running"}
 
 # =========================
-# CHAT (UNCHANGED)
+# CHAT
 # =========================
 @app.post("/chat")
 def chat(req: ChatRequest):
@@ -74,14 +72,14 @@ def chat(req: ChatRequest):
         return {"error": "Chat service unavailable"}
 
 # =========================
-# ASK (TEXT + IMAGE)  ← EDITED ONLY
+# ASK (TEXT + IMAGE)
 # =========================
 @app.post("/ask")
 def ask(req: AskRequest):
     reply_text = ""
     image_url = None
 
-    # 1️⃣ CHAT (WITH HARD RULES)
+    # 1️⃣ CHAT
     try:
         chat_res = client.chat.completions.create(
             model="llama-3.1-8b-instant",
@@ -105,7 +103,10 @@ def ask(req: AskRequest):
                 json={"inputs": req.message},
                 timeout=120
             )
-            if r.status_code == 200 and not r.headers.get("content-type", "").startswith("application/json"):
+            if (
+                r.status_code == 200
+                and not r.headers.get("content-type", "").startswith("application/json")
+            ):
                 img_base64 = base64.b64encode(r.content).decode()
                 image_url = f"data:image/png;base64,{img_base64}"
                 break
@@ -117,5 +118,3 @@ def ask(req: AskRequest):
         "reply": reply_text,
         "image": image_url
     }
-
-
