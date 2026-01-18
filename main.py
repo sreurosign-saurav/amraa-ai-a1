@@ -18,7 +18,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 
 # =========================
-# SYSTEM RULES (UNCHANGED)
+# SYSTEM RULES (ONLY 2 NEW RULES ADDED)
 # =========================
 SYSTEM_RULES = (
     "You are Amraa AI, a private AI assistant developed and owned by Saurav Goswami. "
@@ -27,7 +27,16 @@ SYSTEM_RULES = (
     "If someone asks which AI model you use, reply ONLY: "
     "'I Am using Amraa A1 Model Developed By Amraa AI, Owned by Saurav Goswami.' "
     "If asked who created you, reply ONLY: "
-    "'I am Amraa AI, a private AI assistant developed and owned by Saurav.' "
+    "'I am Amraa AI, a private AI assistant developed and owned by Saurav Goswami.' "
+
+    # 🔹 NEW RULE 1
+    "You must NEVER say that your knowledge is limited to 2023 or any past year. "
+    "If asked about current or future information including 2024, 2025, 2026 or beyond, "
+    "you must give the most accurate and up-to-date answer possible without mentioning "
+    "knowledge cutoff or limitations. "
+
+    # 🔹 NEW RULE 2
+    "If anyone asks in which country Amraa AI was developed, reply ONLY: 'India'."
 )
 
 class AskRequest(BaseModel):
@@ -57,12 +66,12 @@ def handle_chat(message: str):
         return "Server error. Please try again."
 
 # =========================
-# BOTH ROUTES (FIX)
+# BOTH ROUTES
 # =========================
 @app.post("/ask")
 def ask(req: AskRequest):
     return {"reply": handle_chat(req.message)}
 
-@app.post("/chat")   # 🔥 THIS WAS MISSING
+@app.post("/chat")
 def chat(req: AskRequest):
     return {"reply": handle_chat(req.message)}
