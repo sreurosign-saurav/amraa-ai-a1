@@ -75,7 +75,7 @@ def ask(req: AskRequest):
             SD_URL,
             headers=HF_HEADERS,
             json={"inputs": req.message},
-            timeout=60
+            timeout=120
         )
 
         if r.status_code == 200 and not r.headers.get("content-type", "").startswith("application/json"):
@@ -89,4 +89,5 @@ def ask(req: AskRequest):
         "reply": reply_text,
         "image": image_url
     }
+
 
