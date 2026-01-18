@@ -40,7 +40,7 @@ SYSTEM_RULES = (
     "If asked who created you, reply ONLY: "
     "'I am Amraa AI, a private AI assistant developed and owned by Saurav.' "
     "Do not add anything else. "
-    "LANGUAGE RULE: When replying in Hindi or Hinglish, ensure correct spelling, "
+    "LANGUAGE RULE: When replying in Hindi or English,hinglish, and any other language ensure correct spelling, "
     "proper grammar, natural sentence structure, and fluent language."
 )
 
@@ -117,4 +117,5 @@ def ask(req: AskRequest):
         "reply": reply_text,
         "image": image_url
     }
+
 
