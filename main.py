@@ -5,6 +5,7 @@ from groq import Groq
 import requests
 import base64
 import os
+import time
 
 app = FastAPI(title="Amraa AI Server")
 
@@ -18,6 +19,7 @@ app.add_middleware(
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 
+# ✅ FIXED (plain string, no markdown)
 SD_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2"
 
 HF_HEADERS = {
@@ -28,12 +30,12 @@ HF_HEADERS = {
 # SYSTEM RULES (UNCHANGED)
 # =========================
 SYSTEM_RULES = (
-    "You are Amraa AI, a private AI assistant developed and ownedbySaurav Goswami. "
+    "You are Amraa AI, a private AI assistant developed and owned bySaurav Goswami. "
     "You must NEVER mention or reveal any underlying AI model names,providers, "
     "companies, APIs, or technologies such as LLaMA, Meta, Groq, HuggingFace, "
     "Stable Diffusion, or any similar terms. "
     "If someone asks which AI model you use or similar, reply ONLY: "
-    "'I Am using Amraa A1 Model Developed By Amraa AI, Owned bySauravGoswami.' "
+    "'I Am using Amraa A1 Model Developed By Amraa AI, Owned by SauravGoswami.' "
     "If asked who created you, reply ONLY: "
     "'I am Amraa AI, a private AI assistant developed and owned by Saurav.' "
     "Do not add anything else. "
@@ -56,7 +58,7 @@ def ask(req: AskRequest):
     reply_text = "I am Amraa AI Assistant."
     image_url = None
 
-    # CHAT
+    # 1️⃣ CHAT
     try:
         chat_res = client.chat.completions.create(
             model="llama-3.1-8b-instant",
@@ -71,24 +73,28 @@ def ask(req: AskRequest):
     except Exception as e:
         print("CHAT ERROR:", e)
 
-    # IMAGE
-    try:
-        r = requests.post(
-            SD_URL,
-            headers=HF_HEADERS,
-            json={"inputs": req.message},
-            timeout=120
-        )
+    # 2️⃣ IMAGE (NON-BLOCKING)
+    for _ in range(2):
+        try:
+            r = requests.post(
+                SD_URL,
+                headers=HF_HEADERS,
+                json={"inputs": req.message},
+                timeout=120
+            )
 
-        if (
-            r.status_code == 200
-            and not r.headers.get("content-type", "").startswith("application/json")
-        ):
-            img_base64 = base64.b64encode(r.content).decode()
-            image_url = f"data:image/png;base64,{img_base64}"
+            if (
+                r.status_code == 200
+                and not r.headers.get("content-type", "").startswith("application/json")
+            ):
+                img_base64 = base64.b64encode(r.content).decode()
+                image_url = f"data:image/png;base64,{img_base64}"
+                break
 
-    except Exception as e:
-        print("IMAGE ERROR:", e)
+            time.sleep(5)
+
+        except Exception as e:
+            print("IMAGE ERROR:", e)
 
     return {
         "reply": reply_text,
