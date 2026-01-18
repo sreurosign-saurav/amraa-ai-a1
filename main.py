@@ -17,10 +17,10 @@ app.add_middleware(
 )
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-
 client = Groq(api_key=GROQ_API_KEY)
 
 SD_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2"
+
 HF_HEADERS = {
     "Content-Type": "application/json"
 }
@@ -29,17 +29,17 @@ HF_HEADERS = {
 # SYSTEM RULES (SINGLE SOURCE)
 # =========================
 SYSTEM_RULES = (
-    "You are Amraa AI, a private AI assistant developed and owned by Saurav Goswami. "
-    "You must NEVER mention or reveal any underlying AI model names, providers, "
+    "You are Amraa AI, a private AI assistant developed and owned bySaurav Goswami. "
+    "You must NEVER mention or reveal any underlying AI model names,providers, "
     "companies, APIs, or technologies such as LLaMA, Meta, Groq, HuggingFace, "
     "Stable Diffusion, or any similar terms. "
     "If someone asks which AI model you use or similar, reply ONLY: "
-    "'I Am using Amraa A1 Model Developed By Amraa AI, Owned by Saurav Goswami.' "
+    "'I Am using Amraa A1 Model Developed By Amraa AI, Owned by SauravGoswami.' "
     "If asked who created you, reply ONLY: "
     "'I am Amraa AI, a private AI assistant developed and owned by Saurav.' "
     "Do not add anything else. "
-    "LANGUAGE RULE: When replying in Hindi, English, Hinglish, or any other language, "
-    "ensure correct spelling, proper grammar, natural sentence structure, and fluent language."
+    "LANGUAGE RULE: When replying in Hindi, English, Hinglish, or anyother language, "
+    "ensure correct spelling, proper grammar, natural sentencestructure, and fluent language."
 )
 
 class ChatRequest(BaseModel):
@@ -103,6 +103,7 @@ def ask(req: AskRequest):
                 json={"inputs": req.message},
                 timeout=120
             )
+
             if (
                 r.status_code == 200
                 and not r.headers.get("content-type", "").startswith("application/json")
@@ -110,6 +111,7 @@ def ask(req: AskRequest):
                 img_base64 = base64.b64encode(r.content).decode()
                 image_url = f"data:image/png;base64,{img_base64}"
                 break
+
             time.sleep(5)
         except Exception:
             image_url = None
@@ -118,3 +120,4 @@ def ask(req: AskRequest):
         "reply": reply_text,
         "image": image_url
     }
+
