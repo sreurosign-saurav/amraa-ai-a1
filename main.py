@@ -2,10 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from groq import Groq
-import requests
-import base64
 import os
-import time
 
 app = FastAPI(title="Amraa AI Server")
 
@@ -16,15 +13,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# =========================
+# GROQ
+# =========================
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
-
-# ✅ FIXED (plain string, no markdown)
-SD_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-2"
-
-HF_HEADERS = {
-    "Content-Type": "application/json"
-}
 
 # =========================
 # SYSTEM RULES (UNCHANGED)
@@ -43,60 +36,42 @@ SYSTEM_RULES = (
     "ensure correct spelling, proper grammar, naturalsentencestructure, and fluent language."
 )
 
+# =========================
+# REQUEST MODEL
+# =========================
 class AskRequest(BaseModel):
     message: str
 
+# =========================
+# ROOT
+# =========================
 @app.get("/")
 def root():
     return {"status": "Amraa AI server running"}
 
 # =========================
-# ASK (TEXT + IMAGE)
+# ASK (TEXT ONLY – STABLE)
 # =========================
 @app.post("/ask")
 def ask(req: AskRequest):
     reply_text = "I am Amraa AI Assistant."
-    image_url = None
 
-    # 1️⃣ CHAT
     try:
         chat_res = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[
-                {"role": "system", "content": SYSTEM_RULES},
+                {"role": "system", "_toggle": SYSTEM_RULES},
                 {"role": "user", "content": req.message}
             ],
             temperature=0.7,
             max_tokens=200
         )
         reply_text = chat_res.choices[0].message.content.strip()
+
     except Exception as e:
         print("CHAT ERROR:", e)
 
-    # 2️⃣ IMAGE (NON-BLOCKING)
-    for _ in range(2):
-        try:
-            r = requests.post(
-                SD_URL,
-                headers=HF_HEADERS,
-                json={"inputs": req.message},
-                timeout=120
-            )
-
-            if (
-                r.status_code == 200
-                and not r.headers.get("content-type", "").startswith("application/json")
-            ):
-                img_base64 = base64.b64encode(r.content).decode()
-                image_url = f"data:image/png;base64,{img_base64}"
-                break
-
-            time.sleep(5)
-
-        except Exception as e:
-            print("IMAGE ERROR:", e)
-
     return {
         "reply": reply_text,
-        "image": image_url
+        "image": None
     }
