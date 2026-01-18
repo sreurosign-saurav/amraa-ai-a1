@@ -9,9 +9,11 @@ import time
 
 app = FastAPI(title="Amraa AI Server")
 
+# ✅ CORS (GitHub Pages + Mobile allow)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -26,7 +28,7 @@ HF_HEADERS = {
 }
 
 # =========================
-# SYSTEM RULES (SINGLE SOURCE)
+# SYSTEM RULES (DO NOT TOUCH)
 # =========================
 SYSTEM_RULES = (
     "You are Amraa AI, a private AI assistant developed and owned bySaurav Goswami. "
@@ -42,34 +44,12 @@ SYSTEM_RULES = (
     "ensure correct spelling, proper grammar, natural sentencestructure, and fluent language."
 )
 
-class ChatRequest(BaseModel):
-    message: str
-
 class AskRequest(BaseModel):
     message: str
 
 @app.get("/")
 def root():
     return {"status": "Amraa AI server running"}
-
-# =========================
-# CHAT
-# =========================
-@app.post("/chat")
-def chat(req: ChatRequest):
-    try:
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {"role": "system", "content": SYSTEM_RULES},
-                {"role": "user", "content": req.message}
-            ],
-            temperature=0.7,
-            max_tokens=250
-        )
-        return {"reply": response.choices[0].message.content.strip()}
-    except Exception:
-        return {"error": "Chat service unavailable"}
 
 # =========================
 # ASK (TEXT + IMAGE)
@@ -94,7 +74,7 @@ def ask(req: AskRequest):
     except Exception:
         reply_text = "I am Amraa AI Assistant."
 
-    # 2️⃣ IMAGE TRY (NON-BLOCKING)
+    # 2️⃣ IMAGE (best effort, non-blocking)
     for _ in range(2):
         try:
             r = requests.post(
@@ -112,7 +92,7 @@ def ask(req: AskRequest):
                 image_url = f"data:image/png;base64,{img_base64}"
                 break
 
-            time.sleep(5)
+            time.sleep(4)
         except Exception:
             image_url = None
 
