@@ -23,7 +23,7 @@ SD_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-d
 HF_HEADERS = {"Content-Type": "application/json"}
 
 # =========================
-# SYSTEM RULES (UNTOUCHED)
+
 # =========================
 SYSTEM_RULES = (
     "You are Amraa AI, a private AI assistant developed and owned bySaurav Goswami. "
@@ -54,7 +54,7 @@ def ask(req: AskRequest):
     reply_text = "I am Amraa AI Assistant."
     image_url = None
 
-    # 1️⃣ CHAT (SAFE)
+
     try:
         chat_res = client.chat.completions.create(
             model="llama-3.1-8b-instant",
@@ -69,7 +69,7 @@ def ask(req: AskRequest):
     except Exception as e:
         print("CHAT ERROR:", e)
 
-    # 2️⃣ IMAGE (OPTIONAL, NON-BLOCKING)
+
     try:
         r = requests.post(
             SD_URL,
@@ -89,3 +89,4 @@ def ask(req: AskRequest):
         "reply": reply_text,
         "image": image_url
     }
+
