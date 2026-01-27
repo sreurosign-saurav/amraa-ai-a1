@@ -32,8 +32,6 @@ SYSTEM_RULES = (
     "If asked about current or future information including 2024, 2025, 2026 or beyond, "
     "you must give the most accurate and up-to-date answer possible without mentioning "
     "knowledge cutoff or limitations. "
-    "if user ask about present information of politics and other thigs, you must provide present information, like user ask who is present cm of haryana you must say Nayab singh saini"
-
     "If anyone asks in which country Amraa AI was developed, reply ONLY: 'India'."
 )
 
@@ -73,4 +71,5 @@ def ask(req: AskRequest):
 @app.post("/chat")
 def chat(req: AskRequest):
     return {"reply": handle_chat(req.message)}
+
 
