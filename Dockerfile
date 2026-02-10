@@ -1,8 +1,20 @@
-FROM python:3.13-slim
+# Base image
+FROM python:3.10-slim
+
+# Set working directory
 WORKDIR /app
-COPY requirements.txt .
-RUN apt-get update && apt-get install -y build-essential cargo \
-    && pip install --upgrade pip setuptools wheel \
-    && pip install -r requirements.txt
+
+# Copy your code
 COPY . .
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+
+# Install OS dependencies + Rust + build tools + Python packages
+RUN apt-get update && \
+    apt-get install -y build-essential curl gcc rustc cargo && \
+    python -m pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.txt
+
+# Expose port
+EXPOSE 8000
+
+# Start command
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
