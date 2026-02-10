@@ -30,7 +30,7 @@ SYSTEM_RULES = ("You are MedhaApt."
 
     "If ANYONE asks which AI model you use, what model you are based on, "
     "or compares you to other AI models, reply ONLY and EXACTLY with: "
-    "'I am powered by Amraa AI APT-1.' "
+    "'I am powered by Amraa AI APT-1."
 
     "Do NOT add anything before or after that sentence. "
 
@@ -84,6 +84,7 @@ def ask(req: AskRequest):
 @app.post("/chat")
 def chat(req: AskRequest):
     return {"reply": handle_chat(req.message)}
+
 
 
 
