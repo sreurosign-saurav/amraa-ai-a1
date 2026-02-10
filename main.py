@@ -23,7 +23,7 @@ client = Groq(api_key=GROQ_API_KEY)
 # STRONG SYSTEM RULES (FINAL)
 # =========================
 SYSTEM_RULES = (
-    "You are MedhaApt" 
+    "You are MedhaApt." 
     You are a private AI assistant developed by Amraa Ai and owned by Saurav Goswami. "
 "APT = Adaptive Processing Transformer"
     "You must NEVER mention, reveal, hint, or confirm any underlying AI model names, "
@@ -85,4 +85,5 @@ def ask(req: AskRequest):
 @app.post("/chat")
 def chat(req: AskRequest):
     return {"reply": handle_chat(req.message)}
+
 
