@@ -1,5 +1,5 @@
-fastapi
-uvicorn
-groq
-requests
-pydantic
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+groq==0.4.2
+requests==2.31.0
+pydantic==2.6.1
