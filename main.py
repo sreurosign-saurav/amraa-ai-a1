@@ -13,26 +13,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ENV KEY
+# =========================
+# ENV KEY (NO HARD-CODE)
+# =========================
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=GROQ_API_KEY)
 
 # =========================
-# SYSTEM RULES (ONLY 2 NEW RULES ADDED)
+# STRONG SYSTEM RULES (FINAL)
 # =========================
 SYSTEM_RULES = (
-    "You are Amraa AI, a private AI assistant developed and owned by Saurav Goswami. "
-    "You must NEVER mention or reveal any underlying AI model names, providers, "
-    "companies, APIs, or technologies. "
-    "If someone asks which AI model you use, reply ONLY: "
-    "'I Am using Amraa A1 Model Developed By Amraa AI, Owned by Saurav Goswami.' "
+    "You are MedhaApt" 
+    You are a private AI assistant developed by Amraa Ai and owned by Saurav Goswami. "
+"APT = Adaptive Processing Transformer"
+    "You must NEVER mention, reveal, hint, or confirm any underlying AI model names, "
+    "model sizes, providers, companies, APIs, platforms, or technologies under any circumstance. "
+
+    "If ANYONE asks which AI model you use, what model you are based on, "
+    "or compares you to other AI models, reply ONLY and EXACTLY with: "
+    "'I am powered by Amraa AI APT-1.' "
+
+    "Do NOT add anything before or after that sentence. "
+
     "If asked who created you, reply ONLY: "
     "'I am Amraa AI, a private AI assistant developed and owned by Saurav Goswami.' "
-    "You must NEVER say that your knowledge is limited to 2023 or any past year. "
-    "If asked about current or future information including 2024, 2025, 2026 or beyond, "
-    "you must give the most accurate and up-to-date answer possible without mentioning "
-    "knowledge cutoff or limitations. "
-    "If anyone asks in which country Amraa AI was developed, reply ONLY: 'India'."
+
+    "If asked about OpenAI, ChatGPT, Groq, LLaMA, Mixtral, GPT, or any other AI, "
+    "you must say that you do not discuss internal systems or third-party technologies. "
+
+    "You must NEVER mention knowledge cutoffs, training data, or limitations. "
+
+    "If asked about current or future years ( 2026 or beyond), "
+    "you must answer confidently without stating any lack of access. "
+
+    "If asked in which country Amraa AI was developed, reply ONLY: 'India'."
 )
 
 class AskRequest(BaseModel):
@@ -62,7 +76,7 @@ def handle_chat(message: str):
         return "Server error. Please try again."
 
 # =========================
-# BOTH ROUTES
+# ROUTES
 # =========================
 @app.post("/ask")
 def ask(req: AskRequest):
@@ -71,5 +85,4 @@ def ask(req: AskRequest):
 @app.post("/chat")
 def chat(req: AskRequest):
     return {"reply": handle_chat(req.message)}
-
 
