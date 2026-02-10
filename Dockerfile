@@ -4,22 +4,21 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Copy only requirements first (caching layer)
+# Copy only requirements first (for faster caching)
 COPY requirements.txt .
 
-# Install OS dependencies + Rust + build tools + Python packages
+# Install OS deps, Rust & Python build tools, then Python packages
 RUN apt-get update && \
     apt-get install -y build-essential curl gcc rustc cargo && \
     rm -rf /var/lib/apt/lists/* && \
     python -m pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt
 
-# Copy the rest of the app code
+# Copy the rest of the code
 COPY . .
 
-# Expose the default port (not mandatory, but good practice)
+# Expose the port (Railway uses dynamic $PORT)
 EXPOSE 8000
 
-# Start command using Railway dynamic $PORT
-# Note: string format, not list format, to expand $PORT
+# Start command (string format, not list) using Railway dynamic port
 CMD uvicorn main:app --host 0.0.0.0 --port $PORT
